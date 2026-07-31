@@ -1,0 +1,12 @@
+{
+  "tool": "codex",
+  "mode": "pre",
+  "host_contract": "Codex hooks v1",
+  "fixture_source": "dotfiles@05edee840932f06dfdb8761d2dd2ffc4d790173d:tests/test_agent_guard_blackbox.py",
+  "contract_source": "https://learn.chatgpt.com/docs/hooks.md",
+  "source_checked_at": "2026-07-27",
+  "host_version": "Unversioned Codex manual snapshot fetched on the source check date.",
+  "contains_secret": true,
+  "expected_exit": 2,
+  "expected_stderr": "stripe-access-token"
+}

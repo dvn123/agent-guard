@@ -1,0 +1,66 @@
+version: 2
+
+project_name: agent-guard
+
+builds:
+  - id: agent-guard
+    main: ./cmd/agent-guard
+    binary: agent-guard
+    env:
+      - CGO_ENABLED=0
+      - GOTOOLCHAIN=local
+    flags:
+      - -mod=vendor
+      - -trimpath
+    ldflags:
+      - >-
+        -s -w
+        -X github.com/dvn123/agent-guard/internal/version.Version={{.Version}}
+        -X github.com/dvn123/agent-guard/internal/version.Commit={{.Commit}}
+        -X github.com/dvn123/agent-guard/internal/version.Date={{.Date}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: amd64
+
+archives:
+  - ids:
+      - agent-guard
+    formats:
+      - tar.gz
+    name_template: "agent-guard_{{.Version}}_{{.Os}}_{{.Arch}}"
+    wrap_in_directory: true
+    files:
+      - README.md
+      - SECURITY.md
+      - docs/*.md
+      - integrations/launcher/run.sh
+      - integrations/claude/settings.snippet.json
+      - integrations/codex/config.snippet.toml
+      - integrations/cursor/hooks.snippet.json
+      - integrations/opencode/agent-guard.js
+      - scripts/install.sh
+      - scripts/guard-allow
+      - scripts/guard-disable
+      - scripts/guard-enable
+      - scripts/guard-repair
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+release:
+  github:
+    owner: dvn123
+    name: agent-guard
+  draft: true
+  replace_existing_draft: false
+  mode: keep-existing
+
+changelog:
+  sort: asc

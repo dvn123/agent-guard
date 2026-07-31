@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "/bin/sh -c 'if [ -z \"${HOME:-}\" ]; then HOME=$(cd ~ 2>/dev/null && pwd) || exit 2; export HOME; fi; exec \"$HOME/.config/agent-guard/run.sh\" --tool cursor'",
+        "timeout": 10,
+        "failClosed": true
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": "/bin/sh -c 'if [ -z \"${HOME:-}\" ]; then HOME=$(cd ~ 2>/dev/null && pwd) || exit 2; export HOME; fi; exec \"$HOME/.config/agent-guard/run.sh\" --tool cursor'",
+        "timeout": 10,
+        "failClosed": true
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "/bin/sh -c 'if [ -z \"${HOME:-}\" ]; then HOME=$(cd ~ 2>/dev/null && pwd) || exit 2; export HOME; fi; exec \"$HOME/.config/agent-guard/run.sh\" --tool cursor'",
+        "timeout": 10
+      }
+    ]
+  }
+}

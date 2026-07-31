@@ -1,0 +1,35 @@
+#!/bin/sh
+# Human-only false-positive allowlisting. The argument is the lowercase
+# SHA-256 allow-key printed by a block message, never the plaintext value.
+set -eu
+
+if [ "$#" -ne 1 ]; then
+	echo "Usage: scripts/guard-allow <64-character lowercase SHA-256 allow-key>" >&2
+	exit 1
+fi
+key=$1
+case "$key" in
+*[!0-9a-f]*)
+	echo "guard-allow: allow-key must be lowercase hexadecimal" >&2
+	exit 1
+	;;
+esac
+if [ "${#key}" -ne 64 ]; then
+	echo "guard-allow: allow-key must contain exactly 64 characters" >&2
+	exit 1
+fi
+if [ -z "${HOME:-}" ]; then
+	echo "guard-allow: HOME must be set" >&2
+	exit 1
+fi
+
+umask 077
+state_dir="$HOME/.config/agent-guard"
+allow_file="$state_dir/allow"
+mkdir -p "$state_dir"
+touch "$allow_file"
+chmod 0600 "$allow_file"
+if ! grep -Fqx "$key" "$allow_file"; then
+	printf '%s\n' "$key" >>"$allow_file"
+fi
+echo "Agent Guard allow-key added."

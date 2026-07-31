@@ -1,0 +1,7 @@
+#!/bin/sh
+# Human-only recovery primitive. Coding agents must report a block instead of
+# invoking this command.
+set -eu
+
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+exec "$script_dir/install.sh" "$@"

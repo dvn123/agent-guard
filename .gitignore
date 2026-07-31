@@ -1,0 +1,4 @@
+/agent-guard
+/dist/
+*.test
+coverage.out

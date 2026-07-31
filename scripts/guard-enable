@@ -1,0 +1,10 @@
+#!/bin/sh
+# Human-only recovery primitive.
+set -eu
+
+if [ -z "${HOME:-}" ]; then
+	echo "guard-enable: HOME must be set" >&2
+	exit 1
+fi
+rm -f "$HOME/.config/agent-guard/disabled"
+echo "Agent Guard enabled."

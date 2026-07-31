@@ -1,0 +1,5 @@
+{
+  "hook_event_name": "afterShellExecution",
+  "command": "build",
+  "output": "build ok\ntoken: __AGENT_GUARD_TEST_SECRET__\ndone"
+}

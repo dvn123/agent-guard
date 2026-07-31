@@ -1,0 +1,12 @@
+{
+  "tool": "opencode",
+  "mode": "pre",
+  "host_contract": "OpenCode plugin tool.execute.before",
+  "fixture_source": "dotfiles@e16033dea7384d1074b3dfcb86b2b0ee31e5b167:home/dot_config/opencode/plugin/agent-guard.js",
+  "contract_source": "https://opencode.ai/docs/plugins/",
+  "source_checked_at": "2026-07-27",
+  "host_version": "OpenCode v1.17.11 session/tools.ts source contract.",
+  "contains_secret": true,
+  "expected_exit": 2,
+  "expected_stderr": "stripe-access-token"
+}

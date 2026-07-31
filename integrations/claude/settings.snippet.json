@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'if [ -z \"${HOME:-}\" ]; then HOME=$(cd ~ 2>/dev/null && pwd) || exit 2; export HOME; fi; exec \"$HOME/.config/agent-guard/run.sh\" --tool claude'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'if [ -z \"${HOME:-}\" ]; then HOME=$(cd ~ 2>/dev/null && pwd) || exit 2; export HOME; fi; exec \"$HOME/.config/agent-guard/run.sh\" --tool claude'"
+          }
+        ]
+      }
+    ]
+  }
+}

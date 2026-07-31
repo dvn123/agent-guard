@@ -1,0 +1,13 @@
+{
+  "tool": "cursor",
+  "mode": "post",
+  "host_contract": "Cursor hooks schema 1",
+  "fixture_source": "dotfiles@05edee840932f06dfdb8761d2dd2ffc4d790173d:home/dot_cursor/hooks.json.tmpl",
+  "contract_source": "https://cursor.com/docs/hooks",
+  "source_checked_at": "2026-07-27",
+  "host_version": "Cursor hooks schema 1; unversioned documentation.",
+  "contains_secret": true,
+  "expected_exit": 0,
+  "expected_stderr": "stripe-access-token",
+  "redacts_secret": false
+}

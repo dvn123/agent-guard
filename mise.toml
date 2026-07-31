@@ -1,0 +1,13 @@
+[settings]
+locked = true
+lockfile = true
+locked_verify_provenance = true
+minimum_release_age = "7d"
+cargo.binstall = false
+lockfile_platforms = ["macos-arm64", "linux-x64", "linux-arm64"]
+
+[tools]
+go = "1.26.5"
+node = "26.5.1"
+bun = "1.3.14"
+goreleaser = "2.17.1"

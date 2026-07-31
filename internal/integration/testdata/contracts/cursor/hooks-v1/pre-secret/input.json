@@ -1,0 +1,4 @@
+{
+  "hook_event_name": "beforeShellExecution",
+  "command": "printf %s __AGENT_GUARD_TEST_SECRET__"
+}

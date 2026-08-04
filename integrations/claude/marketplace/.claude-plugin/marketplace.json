@@ -1,0 +1,15 @@
+{
+  "name": "coding-agents",
+  "description": "Host adapters for Agent Guard, deployed by coding-agents-sync",
+  "owner": {
+    "name": "dvn123"
+  },
+  "plugins": [
+    {
+      "name": "agent-guard",
+      "description": "Offline secret scanning boundary for Claude Code tool hooks",
+      "source": "./plugins/agent-guard",
+      "category": "security"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "agent-guard",
+  "version": "1.0.0",
+  "description": "Offline secret scanning boundary for Codex PreToolUse and PostToolUse hooks",
+  "author": {
+    "name": "dvn123"
+  },
+  "hooks": "./hooks/hooks.json"
+}

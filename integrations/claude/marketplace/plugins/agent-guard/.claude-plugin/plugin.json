@@ -1,0 +1,8 @@
+{
+  "name": "agent-guard",
+  "version": "1.0.0",
+  "description": "Offline secret scanning boundary for Claude Code PreToolUse and PostToolUse hooks",
+  "author": {
+    "name": "dvn123"
+  }
+}

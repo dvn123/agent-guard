@@ -1,0 +1,31 @@
+{
+  "description": "Agent Guard Pre/PostToolUse secret scanning via the stable launcher",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'if [ -z \"${HOME:-}\" ]; then HOME=$(cd ~ 2>/dev/null && pwd) || exit 2; export HOME; fi; exec \"$HOME/.config/agent-guard/run.sh\" --tool codex'",
+            "timeout": 10,
+            "statusMessage": "Checking for secrets"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/bin/sh -c 'if [ -z \"${HOME:-}\" ]; then HOME=$(cd ~ 2>/dev/null && pwd) || exit 2; export HOME; fi; exec \"$HOME/.config/agent-guard/run.sh\" --tool codex'",
+            "timeout": 6,
+            "statusMessage": "Checking secret output"
+          }
+        ]
+      }
+    ]
+  }
+}

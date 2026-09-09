@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { after, before, describe, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { AgentGuard } from "./agent-guard.js";
+import AgentGuard from "./agent-guard.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const launcherSource = join(here, "..", "launcher", "run.sh");
@@ -20,6 +20,7 @@ const originalHome = process.env.HOME;
 
 let isolatedHome;
 let plugin;
+let v2;
 
 before(async () => {
 	const binary = process.env.AGENT_GUARD_TEST_BINARY;
@@ -30,8 +31,25 @@ before(async () => {
 	}
 	isolatedHome = makeHome(binary);
 	process.env.HOME = isolatedHome;
-	plugin = await AgentGuard({ directory: isolatedHome });
+	plugin = await AgentGuard.server({ directory: isolatedHome });
+	v2 = await setupV2({ directory: isolatedHome });
 });
+
+// Minimal stand-in for the OpenCode 2 plugin context, capturing the hooks the
+// plugin registers so they can be driven with real host event shapes.
+async function setupV2({ directory }) {
+	const hooks = {};
+	await AgentGuard.setup({
+		location: { directory },
+		tool: {
+			hook: (name, callback) => {
+				hooks[name] = callback;
+				return Promise.resolve({ dispose: () => Promise.resolve() });
+			},
+		},
+	});
+	return hooks;
+}
 
 after(() => {
 	if (originalHome === undefined) {
@@ -113,6 +131,18 @@ describe("OpenCode adapter host contract", () => {
 		}
 	});
 
+	test("no-ops under a V1 context that has no tool domain", async () => {
+		// V1 invokes setup() too. It must not throw, and must register nothing.
+		assert.equal(
+			await AgentGuard.setup({
+				agent: {},
+				catalog: {},
+				options: {},
+			}),
+			undefined,
+		);
+	});
+
 	test("fails closed when the isolated launcher cannot spawn", async () => {
 		const launcher = join(isolatedHome, ".config", "agent-guard", "run.sh");
 		const heldLauncher = `${launcher}.held`;
@@ -136,6 +166,76 @@ describe("OpenCode adapter host contract", () => {
 		} finally {
 			renameSync(heldLauncher, launcher);
 		}
+	});
+});
+
+describe("OpenCode 2 adapter host contract", () => {
+	test("allows clean input through the stable launcher", async () => {
+		assert.equal(
+			await v2["execute.before"]({
+				tool: "shell",
+				input: { command: "printf hello" },
+			}),
+			undefined,
+		);
+	});
+
+	test("throws before execution when the scanner detects a secret", async () => {
+		await assert.rejects(
+			v2["execute.before"]({
+				tool: "shell",
+				input: { command: `printf %s ${syntheticSecret()}` },
+			}),
+			/stripe-access-token/,
+		);
+	});
+
+	test("replaces post-call result with verified redaction", async () => {
+		const event = {
+			tool: "shell",
+			input: { command: "build" },
+			status: "completed",
+			result: {
+				output: { exit: 0, output: `token: ${syntheticSecret()}` },
+				content: [
+					{ type: "text", text: `build ok\ntoken: ${syntheticSecret()}\ndone` },
+				],
+			},
+		};
+		await v2["execute.after"](event);
+		const text = event.result.content.map((part) => part.text).join("\n");
+		assert.match(text, /\[REDACTED:/);
+		assert.doesNotMatch(text, new RegExp(syntheticSecret()));
+		// The typed value must not retain the original text either.
+		assert.doesNotMatch(
+			JSON.stringify(event.result.output),
+			new RegExp(syntheticSecret()),
+		);
+	});
+
+	test("leaves a clean post-call result untouched", async () => {
+		const result = {
+			output: { exit: 0, output: "build ok" },
+			content: [{ type: "text", text: "build ok" }],
+		};
+		const event = {
+			tool: "shell",
+			input: { command: "build" },
+			status: "completed",
+			result,
+		};
+		await v2["execute.after"](event);
+		assert.equal(event.result, result);
+	});
+
+	test("ignores a failed call, which produced no output to screen", async () => {
+		const event = {
+			tool: "shell",
+			input: { command: "build" },
+			status: "error",
+			error: { message: syntheticSecret() },
+		};
+		assert.equal(await v2["execute.after"](event), undefined);
 	});
 });
 

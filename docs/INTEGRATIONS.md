@@ -8,7 +8,7 @@ native plugin surface; the older snippets remain manual merge fallbacks:
 | Claude Code | `integrations/claude/marketplace/` | `settings.snippet.json` | exit 2 and stderr deny | exit 0 with `updatedToolOutput` |
 | Codex | `integrations/codex/marketplace/` | `config.snippet.toml` | exit 2 and stderr deny | exit 2; stderr becomes replacement |
 | Cursor | `integrations/cursor/plugin/` | `hooks.snippet.json` | shell/file-read allow/deny JSON | shell-output warning only |
-| OpenCode | `integrations/opencode/agent-guard.js` | (same file) | plugin throws on denial | plugin replaces `output.output` |
+| OpenCode | `integrations/opencode/agent-guard.js` | (same file) | plugin throws on denial | plugin replaces the tool result |
 
 Do not overwrite generated or unrelated configuration. Preserve existing hooks,
 features, plugins, and host-specific settings while merging a fallback snippet.
@@ -79,6 +79,17 @@ launcher through `node:child_process` for every call. That API works in both
 the Bun-based CLI and Electron's Node runtime, unlike the Bun-only global
 process API. It forwards the current environment explicitly so the launcher
 and binary resolve the same home directory.
+
+`opencode` (V1) and `opencode2` (V2) use incompatible plugin APIs, and both
+read the same file. The single default export therefore carries `server()` for
+V1 alongside `id` and `setup()` for V2; V2 ignores the extra `server` key. V1
+also calls `setup()`, passing a context with no tool domain, so `setup()`
+returns early when `tool.hook` is absent rather than throwing.
+
+Both runtimes block by throwing from the pre-call hook, which rejects that tool
+call and shows the message to the model. Post-call, V1 replaces `output.output`
+while V2 replaces both the `content` parts and the typed `output` value of
+`event.result`, since a secret in either has already left the sandbox.
 
 ## Contract updates
 

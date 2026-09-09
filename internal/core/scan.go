@@ -64,10 +64,13 @@ func buildDetector() *detect.Detector {
 	if err != nil {
 		panic("agent-guard: config.Default failed: " + err.Error())
 	}
-	// One local rule on top of the embedded defaults; see
-	// rule_authenticated_url.go for why it is not a config file.
+	// Local rules on top of the embedded defaults; see
+	// rule_authenticated_url.go for why they are not a config file.
 	if err := addAuthenticatedURLRule(cfg); err != nil {
 		panic("agent-guard: authenticated-url rule failed: " + err.Error())
+	}
+	if err := addGCPOAuthAccessTokenRule(cfg); err != nil {
+		panic("agent-guard: gcp-oauth-access-token rule failed: " + err.Error())
 	}
 
 	det := newDetectorContext(context.Background(), cfg)

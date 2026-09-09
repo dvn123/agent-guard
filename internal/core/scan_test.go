@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -532,6 +533,85 @@ func TestScanAuthenticatedURL(t *testing.T) {
 	}
 }
 
+// Generated for the same reason as fakeSecret: an inline token-shaped literal
+// would make this file self-tripping, blocking both the agent reading it and
+// the edit that introduced it. The prefix is split from the body by the string
+// concatenation, so the source text never contains a matchable token.
+func ya29Token(n int) string { return "ya29." + fakeSecret(n) }
+
+// TestScanGCPOAuthAccessToken pins the recall gap this rule closes. betterleaks
+// v1.6.1 cannot reach these: generic-api-key's secret alternation caps at 150
+// characters with a mandatory trailing boundary, and its base64 branch excludes
+// the '.' the token hits at character five. Removing addGCPOAuthAccessTokenRule
+// from buildDetector turns every want:true case below red.
+func TestScanGCPOAuthAccessToken(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		text string
+		want bool
+	}{
+		// Realistic lengths: real tokens run to several hundred characters.
+		{"bare token", ya29Token(700), true},
+		{"labelled token", "access_token: " + ya29Token(220), true},
+		{"json field", `{"access_token":"` + ya29Token(320) + `","expires_in":3599}`, true},
+		{"authorization header", "Authorization: Bearer " + ya29Token(180), true},
+		{"terraform output", `token = "` + ya29Token(400) + `"`, true},
+		// Short but still above the 20-character body minimum.
+		{"minimum body", ya29Token(20), true},
+
+		// Below the body minimum.
+		{"19 char body", ya29Token(19), false},
+		{"prefix alone", "the ya29. prefix identifies a Google access token", false},
+
+		// Placeholders. The padded stub reaches the filter and is dropped on
+		// entropy; the angle-bracket form never matches the regex at all.
+		{"padded stub", "access_token: ya29." + strings.Repeat("A", 60), false},
+		{"repeated pair", "access_token: ya29." + strings.Repeat("ab", 40), false},
+		{"angle placeholder", "access_token: ya29." + "<ACCESS_TOKEN>", false},
+
+		// Must be anchored on the prefix, not on a base64url run.
+		{"no prefix", "access_token: " + fakeSecret(400), false},
+		{"prefix mid-word", "libya29." + fakeSecret(400), false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			findings, err := scan(testDetector(t), tc.text, nil)
+			if err != nil {
+				t.Fatalf("scan: %v", err)
+			}
+			var got bool
+			for _, f := range findings {
+				if f.Rule == gcpOAuthAccessTokenRuleID {
+					got = true
+				}
+			}
+			if got != tc.want {
+				t.Fatalf("%s matched = %v, want %v (findings %#v)", gcpOAuthAccessTokenRuleID, got, tc.want, findings)
+			}
+		})
+	}
+}
+
+// The whole token must be redacted, not a prefix of it: a surviving tail is
+// still a usable bearer credential if the redaction only clipped the front.
+func TestScanGCPOAuthAccessTokenRedactsWholeToken(t *testing.T) {
+	token := ya29Token(700)
+	text := "access_token: " + token + "\nexpires_in: 3599"
+	findings, err := scan(testDetector(t), text, nil)
+	if err != nil {
+		t.Fatalf("scan: %v", err)
+	}
+	out, ok := redact(text, findings)
+	if !ok {
+		t.Fatalf("redact returned not-ok for %#v", findings)
+	}
+	if strings.Contains(out, token) || strings.Contains(out, token[len(token)-64:]) {
+		t.Fatalf("token survived redaction: %q", out)
+	}
+	if !strings.Contains(out, "expires_in: 3599") {
+		t.Fatalf("redaction ate surrounding text: %q", out)
+	}
+}
+
 // The guard must not block an agent from reading its own source.
 func TestScanTestFileIsNotSelfTripping(t *testing.T) {
 	src, err := os.ReadFile("scan_test.go")
@@ -555,5 +635,45 @@ func TestAddAuthenticatedURLRuleIsNoOpWhenPresent(t *testing.T) {
 	}
 	if len(cfg.NoKeywordRules) != 0 || len(cfg.OrderedRules) != 0 {
 		t.Fatalf("registered over an existing rule: %#v / %#v", cfg.NoKeywordRules, cfg.OrderedRules)
+	}
+}
+
+// The rule must defer to an upstream rule of the same id, not shadow it.
+func TestAddGCPOAuthAccessTokenRuleIsNoOpWhenPresent(t *testing.T) {
+	cfg := &config.Config{Rules: map[string]config.Rule{gcpOAuthAccessTokenRuleID: {RuleID: gcpOAuthAccessTokenRuleID}}}
+	if err := addGCPOAuthAccessTokenRule(cfg); err != nil {
+		t.Fatalf("addGCPOAuthAccessTokenRule: %v", err)
+	}
+	if len(cfg.OrderedRules) != 0 || len(cfg.Keywords) != 0 || len(cfg.KeywordToRules) != 0 {
+		t.Fatalf("registered over an existing rule: %#v / %#v / %#v",
+			cfg.OrderedRules, cfg.Keywords, cfg.KeywordToRules)
+	}
+}
+
+// A keyworded rule is only ever evaluated if it is reachable from both
+// prefilter tables: Config.Keywords seeds the Aho-Corasick automaton and
+// KeywordToRules maps a hit back to the rule. Registering the rule but missing
+// either table leaves it silently inert, which no scan-level test would
+// distinguish from a regex that simply does not match.
+func TestAddGCPOAuthAccessTokenRuleWiresThePrefilter(t *testing.T) {
+	cfg := &config.Config{}
+	if err := addGCPOAuthAccessTokenRule(cfg); err != nil {
+		t.Fatalf("addGCPOAuthAccessTokenRule: %v", err)
+	}
+	if _, ok := cfg.Rules[gcpOAuthAccessTokenRuleID]; !ok {
+		t.Fatalf("rule absent from cfg.Rules: %#v", cfg.Rules)
+	}
+	if _, ok := cfg.Keywords[gcpOAuthAccessTokenKeyword]; !ok {
+		t.Fatalf("keyword absent from cfg.Keywords: %#v", cfg.Keywords)
+	}
+	if !slices.Contains(cfg.KeywordToRules[gcpOAuthAccessTokenKeyword], gcpOAuthAccessTokenRuleID) {
+		t.Fatalf("rule unreachable from cfg.KeywordToRules: %#v", cfg.KeywordToRules)
+	}
+	if !slices.Contains(cfg.OrderedRules, gcpOAuthAccessTokenRuleID) {
+		t.Fatalf("rule absent from cfg.OrderedRules: %#v", cfg.OrderedRules)
+	}
+	// Keyworded rules must not also be registered as always-on.
+	if slices.Contains(cfg.NoKeywordRules, gcpOAuthAccessTokenRuleID) {
+		t.Fatalf("keyworded rule registered as no-keyword: %#v", cfg.NoKeywordRules)
 	}
 }

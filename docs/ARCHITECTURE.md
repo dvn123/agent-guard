@@ -37,7 +37,8 @@ internal/cli ──► internal/core ──► embedded Betterleaks
 ## Scanner lifetime and failures
 
 Each hook invocation constructs one detector from Betterleaks' embedded default
-configuration and the local authenticated-URL rule. The detector performs no
+configuration plus two local rules, authenticated-URL and GCP OAuth access
+token. The detector performs no
 runtime network access. Its maximum decode depth is five, and inline
 `gitleaks:allow` or `betterleaks:allow` comments are ignored because an agent
 could forge them.

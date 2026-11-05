@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strings"
 
 	"github.com/betterleaks/betterleaks/config"
 	"github.com/pelletier/go-toml/v2"
@@ -74,18 +75,24 @@ func parseExclusions(data []byte, cfg *config.Config) ([]exclusion, error) {
 }
 
 // isExcluded reports whether an exclusion for ruleID has a match whose capture
-// group is exactly [start, end). An unusable span (0, 0) never matches, so a
+// group contains the secret. [start, end) is the whole rule match, which
+// usually includes the key name and a trailing delimiter, so the secret is
+// located inside it. A decoded secret does not appear in the raw text; its
+// encoded span stands in for it. An unusable span (0, 0) never matches, so a
 // span-mapping failure fails closed.
-func isExcluded(text, ruleID string, start, end int) bool {
+func isExcluded(text, ruleID, secret string, start, end int) bool {
 	if start >= end {
 		return false
+	}
+	if i := strings.LastIndex(text[start:end], secret); secret != "" && i >= 0 {
+		start, end = start+i, start+i+len(secret)
 	}
 	for _, e := range exclusions {
 		if !slices.Contains(e.Rules, ruleID) {
 			continue
 		}
 		for _, m := range e.re.FindAllStringSubmatchIndex(text, -1) {
-			if m[2] == start && m[3] == end {
+			if m[2] <= start && end <= m[3] {
 				return true
 			}
 		}

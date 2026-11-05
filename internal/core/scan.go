@@ -139,7 +139,7 @@ func scanWithContext(ctx context.Context, det *detect.Detector, text string, all
 			}
 		}
 		start, end := matchSpan(len(text), newlines, f.StartLine, f.StartColumn, f.EndColumn)
-		if isExcluded(text, f.RuleID, start, end) {
+		if isExcluded(text, f.RuleID, f.Secret, start, end) {
 			continue
 		}
 		findings = append(findings, Finding{Rule: f.RuleID, Secret: f.Secret, AllowKey: key, Start: start, End: end})

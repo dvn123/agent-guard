@@ -1,9 +1,10 @@
 # Built-in false-positive exclusions, compiled into agent-guard.
 #
 # A finding is dropped when its rule is listed in `rules` and some match of
-# `pattern` has its single capture group covering exactly the flagged span.
-# For a decoded finding (base64, hex, percent) the span is the encoded text,
-# not the decoded secret.
+# `pattern` has its single capture group containing the flagged secret. The
+# group only needs to cover the secret, not the key name or delimiters the
+# rule also matched. For a decoded finding (base64, hex, percent) the secret
+# is not in the raw text, so the group must cover the whole encoded text.
 #
 # Fields, all required:
 #   id           unique, kebab-case
@@ -29,4 +30,67 @@ pattern = '''https://(?:www\.)?cursor\.com/(?:open|agents)\?link=([A-Za-z0-9_-]+
 examples = [
   '<a href="https://cursor.com/open?link=eyJ2ZXJzaW9uIjoxLCJ0eXBlIjoiQlVHQk9UX0ZJWF9JTl9DVVJTT1IiLCJkYXRhIjp7InJlZGlzS2V5IjoiaEFUY3ZON3FIMmpDVmV4UTlzSzRtRVhnelNidU02cEdaaUJVZHdQOHJKMyIsImVuY3J5cHRpb25LZXkiOiJuRlloQVRjdk43cUgyakNWZXhROXNLNG1FWGd6U2J1TTZwR1ppQlVkd1A4IiwiYnJhbmNoIjoic29tZS9mZWF0dXJlLWJyYW5jaCIsInJlcG9Pd25lciI6ImFjbWUiLCJyZXBvTmFtZSI6IndpZGdldHMiLCJwcm92aWRlciI6ImdpdGh1YiJ9fQ" target="_blank" rel="noopener noreferrer">',
   '<a href="https://cursor.com/agents?link=eyJ2ZXJzaW9uIjoxLCJ0eXBlIjoiQlVHQk9UX0ZJWF9JTl9XRUIiLCJkYXRhIjp7InJlZGlzS2V5IjoibUVYZ3pTYnVNNnBHWmlCVWR3UDhySjNrRFdmeVJhdEw1bkZZaEFUY3ZONyIsImVuY3J5cHRpb25LZXkiOiJzSzRtRVhnelNidU02cEdaaUJVZHdQOHJKM2tEV2Z5UmF0TDVuRlloQVRjIiwiYnJhbmNoIjoic29tZS9mZWF0dXJlLWJyYW5jaCIsInJlcG9Pd25lciI6ImFjbWUiLCJyZXBvTmFtZSI6IndpZGdldHMiLCJwcm92aWRlciI6ImdpdGh1YiJ9fQ" target="_blank" rel="noopener noreferrer">',
+]
+
+[[exclusion]]
+id = "atlassian-account-id"
+description = """
+The atlassianAccountId field in the context object of Atlassian MCP responses. \
+A 24-hex Atlassian account ID is a public user identifier, but the generic \
+branch of atlassian-api-token reads any 24-character value after "atlassian" \
+as a token."""
+rules = ["atlassian-api-token"]
+pattern = '''"atlassianAccountId"\s*:\s*"([0-9a-f]{24})"'''
+examples = [
+  '{"data":{"issues":[]},"context":{"atlassianAccountId":"5f3a9c0e7b21d84e6c9a0f17","userEmail":"someone@example.com","cloudId":"e28499e4-c2d5-b48e-ee8d-c49896956764"}}',
+]
+
+[[exclusion]]
+id = "teamcity-credentials-json"
+description = """
+TeamCity versioned-settings references to tokens stored on the TeamCity server. \
+The UUID after credentialsJSON: names the stored token; it is not the token."""
+rules = ["generic-api-key"]
+pattern = '''credentialsJSON:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'''
+examples = [
+  '''<param name="env.DEPLOY_AUTH_TOKEN" value="credentialsJSON:d6ed6194-3cc5-476e-e428-ba0767248f7e" spec="password display='normal'" />''',
+  '''<param name="secure:accessToken" value="credentialsJSON:07ca66f7-1a1c-7a03-6c6c-f8f4de4243b3" />''',
+]
+
+[[exclusion]]
+id = "gradle-cache-key"
+description = """
+Gradle build-cache keys and input fingerprints, in --build-cache debug logs and \
+Develocity build-scan JSON. They are content hashes of task inputs."""
+rules = ["generic-api-key"]
+pattern = '''(?:"cacheKey"\s*:\s*"|build cache key: )([0-9a-f]{32})\b'''
+examples = [
+  '{"originBuildInvocationId":"6sksz4a6arcb5bhradvnqun4ni","cacheKey":"e88a8c82622d17428ea4d9124a01c0bf","originExecutionTime":42}',
+  "Appending input value fingerprint for 'javaCompiler.metadata.taskInputs.implementation' to build cache key: db37fc20485e98d8bedc6ab2114d9eea\n",
+]
+
+[[exclusion]]
+id = "tfe-oauth-token-id"
+description = """
+Terraform Cloud VCS OAuth token IDs (ot- plus 16 characters) in workspace JSON \
+and HCL, under oauth-token-id or any variable name (for example \
+github_token). The ID names the OAuth token stored in Terraform Cloud; it \
+is not the token."""
+rules = ["generic-api-key"]
+pattern = '''["'](ot-[A-Za-z0-9]{16})["']'''
+examples = [
+  '"vcs-repo": {"identifier": "example/terraform-test-proj", "ingress-submodules": false, "oauth-token-id": "ot-9MZVGT9mRqYfjf5Z", "branch": ""}',
+  "  vcs_repo {\n    identifier     = \"example/infrastructure\"\n    oauth_token_id = \"ot-YuqhH2AGWVDiSPbM\"\n  }",
+  '  github_token = "ot-YuqhH2AGWVDiSPbM"',
+]
+
+[[exclusion]]
+id = "databricks-app-oauth-ids"
+description = """
+OAuth client and integration IDs in Databricks Apps API responses. An OAuth \
+client ID is a public identifier; the app's client secret is never returned."""
+rules = ["generic-api-key"]
+pattern = '''"oauth2_app_(?:client|integration)_id"\s*:\s*"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"'''
+examples = [
+  "\"name\": \"example-app\",\n  \"oauth2_app_client_id\": \"e426f766-1eae-7064-9751-cd46c4f44301\",\n  \"oauth2_app_integration_id\": \"07b99418-7a60-3d65-a1c1-e75aab8af89d\",\n  \"resources\": []",
 ]

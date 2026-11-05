@@ -475,6 +475,15 @@ func fakeSecret(n int) string {
 	return string(b)
 }
 
+func fakeHex(n int) string {
+	const digits = "0123456789abcdef"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = digits[(i*7+3)%len(digits)]
+	}
+	return string(b)
+}
+
 func authURL(scheme, user, secret, host string) string {
 	return scheme + "://" + user + ":" + secret + "@" + host
 }
@@ -578,6 +587,12 @@ func TestScanExclusionsStayNarrow(t *testing.T) {
 		{"cursor link on other host", anchor(bugbotLink("https://cursor.example.com/open?link=", fakeSecret(43)))},
 		{"cursor link other parameter", anchor(bugbotLink("https://cursor.com/open?token=", fakeSecret(43)))},
 		{"provider token inside cursor link", anchor(bugbotLink("https://cursor.com/open?link=", ghToken()))},
+		{"other atlassian field", `{"context":{"atlassian` + `Token":"` + fakeHex(24) + `"}}`},
+		{"teamcity parameter dump with literal", `env.VENDOR_API_KEY                     = ` + fakeSecret(36)},
+		{"tfe oauth token id shape unquoted", `github_token = ot-` + fakeSecret(16) + fakeSecret(4)},
+		{"hex api key", `{"api` + `Key":"` + fakeHex(32) + `"}`},
+		{"tfe oauth token value", `"oauth-token": "` + fakeSecret(40) + `"`},
+		{"databricks client secret", `"oauth2_app_client_secret": "` + fakeSecret(40) + `"`},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			findings, err := scan(testDetector(t), tc.text, nil)

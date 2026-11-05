@@ -71,8 +71,8 @@ possible. The local authenticated-URL rule ignores low-entropy and placeholder
 values, which improves precision but cannot identify every credential.
 
 Built-in exclusions (`internal/core/exclusions.toml`) drop findings by context:
-a listed rule whose span is exactly the capture group of the entry's pattern.
-A real secret that lands in that exact position and is matched only by the
+a listed rule whose secret lies inside the capture group of the entry's
+pattern. A real secret that lands in that position and is matched only by the
 listed rules is not detected. Each entry trades that recall for removing a
 recurring false positive.
 

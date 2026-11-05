@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -16,6 +17,8 @@ import (
 	"time"
 
 	"github.com/betterleaks/betterleaks/config"
+	"github.com/betterleaks/betterleaks/report"
+	"github.com/betterleaks/betterleaks/sources"
 
 	"github.com/betterleaks/betterleaks/detect"
 )
@@ -528,6 +531,98 @@ func TestScanAuthenticatedURL(t *testing.T) {
 			}
 			if got != tc.want {
 				t.Fatalf("%s matched = %v, want %v (findings %#v)", authenticatedURLRuleID, got, tc.want, findings)
+			}
+		})
+	}
+}
+
+// bugbotLink builds a Cursor Bugbot link with the same payload shape as the
+// ones Bugbot posts on GitHub reviews, with fake key values.
+func bugbotLink(prefix, encryptionKey string) string {
+	payload := `{"version":1,"type":"BUGBOT_FIX_IN_CURSOR","data":{"redisKey":"` + fakeSecret(43) +
+		`","encryptionKey":"` + encryptionKey + `","branch":"some/feature-branch","repoOwner":"acme","repoName":"widgets","provider":"github"}}`
+	return prefix + base64.RawURLEncoding.EncodeToString([]byte(payload))
+}
+
+// TestExclusionExamples proves every entry in exclusions.toml is both needed
+// (its examples are flagged by one of its rules without exclusions) and
+// effective (scan reports nothing for them).
+func TestExclusionExamples(t *testing.T) {
+	det := testDetector(t)
+	for _, e := range exclusions {
+		for i, example := range e.Examples {
+			t.Run(fmt.Sprintf("%s/%d", e.ID, i), func(t *testing.T) {
+				raw := det.DetectContext(context.Background(), sources.Fragment{Raw: example})
+				if !slices.ContainsFunc(raw, func(f report.Finding) bool { return slices.Contains(e.Rules, f.RuleID) }) {
+					t.Fatalf("example is not flagged by %v without exclusions; the entry is unnecessary or the example is wrong", e.Rules)
+				}
+				findings, err := scan(det, example, nil)
+				if err != nil {
+					t.Fatalf("scan: %v", err)
+				}
+				if len(findings) != 0 {
+					t.Fatalf("example still flagged: %#v", findings)
+				}
+			})
+		}
+	}
+}
+
+// TestScanExclusionsStayNarrow holds near misses that must still be flagged.
+func TestScanExclusionsStayNarrow(t *testing.T) {
+	anchor := func(link string) string { return `<a href="` + link + `" target="_blank">Fix in Cursor</a>` }
+	for _, tc := range []struct {
+		name string
+		text string
+	}{
+		{"cursor link on other host", anchor(bugbotLink("https://cursor.example.com/open?link=", fakeSecret(43)))},
+		{"cursor link other parameter", anchor(bugbotLink("https://cursor.com/open?token=", fakeSecret(43)))},
+		{"provider token inside cursor link", anchor(bugbotLink("https://cursor.com/open?link=", ghToken()))},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			findings, err := scan(testDetector(t), tc.text, nil)
+			if err != nil {
+				t.Fatalf("scan: %v", err)
+			}
+			if len(findings) == 0 {
+				t.Fatal("not flagged")
+			}
+		})
+	}
+}
+
+func TestParseExclusionsRejectsMalformedEntries(t *testing.T) {
+	cfg, err := config.Default()
+	if err != nil {
+		t.Fatalf("config.Default: %v", err)
+	}
+	entry := func(fields string) string {
+		return "[[exclusion]]\n" + fields + "\n"
+	}
+	valid := `id = "a"
+description = "d"
+rules = ["generic-api-key"]
+pattern = 'x=(\w+)'
+examples = ["x=1"]`
+	if _, err := parseExclusions([]byte(entry(valid)), cfg); err != nil {
+		t.Fatalf("valid entry rejected: %v", err)
+	}
+	for _, tc := range []struct {
+		name string
+		toml string
+	}{
+		{"unknown field", entry(valid + "\nallow_all = true")},
+		{"missing examples", entry(strings.Replace(valid, `examples = ["x=1"]`, "", 1))},
+		{"no rules", entry(strings.Replace(valid, `["generic-api-key"]`, "[]", 1))},
+		{"unknown rule", entry(strings.Replace(valid, "generic-api-key", "generic-api-kye", 1))},
+		{"no capture group", entry(strings.Replace(valid, `x=(\w+)`, `x=\w+`, 1))},
+		{"two capture groups", entry(strings.Replace(valid, `x=(\w+)`, `(x)=(\w+)`, 1))},
+		{"invalid regex", entry(strings.Replace(valid, `x=(\w+)`, `x=(\w+`, 1))},
+		{"duplicate id", entry(valid) + entry(valid)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := parseExclusions([]byte(tc.toml), cfg); err == nil {
+				t.Fatal("accepted")
 			}
 		})
 	}

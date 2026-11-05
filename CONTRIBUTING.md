@@ -43,6 +43,16 @@ When changing a host contract, add or version its fixture under
 date, verify native JSON or exit semantics, and exercise both pre- and
 post-output behavior where the host supports them.
 
+## False-positive exclusions
+
+A recurring false positive whose value changes on every occurrence goes in
+`internal/core/exclusions.toml`; a single fixed value belongs in the human hash
+allowlist instead. The file header documents the fields. Anchor the pattern on
+context only the benign source produces, list only the rules that actually
+fire, use fake values in examples, and add near misses to
+`TestScanExclusionsStayNarrow`. `TestExclusionExamples` fails if an example is
+not flagged without the entry or is still flagged with it.
+
 ## Dependencies
 
 Dependencies require a deliberate provenance review. Update `go.mod` and

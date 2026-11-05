@@ -16,8 +16,8 @@ internal/cli ──► internal/core ──► embedded Betterleaks
 
 ## Boundaries
 
-1. `internal/core` owns payload classification, scanning, hash allowlisting,
-   span-preserving redaction, the verifying re-scan, and the real scanner
+1. `internal/core` owns payload classification, scanning, built-in
+   false-positive exclusions, hash allowlisting, span-preserving redaction, the verifying re-scan, and the real scanner
    self-test. It does not know how a host represents allow, denial, or output
    replacement.
 2. `internal/integration` contains one thin adapter per host. The registry is

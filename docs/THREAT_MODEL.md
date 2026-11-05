@@ -28,6 +28,8 @@ For a recognized pre-tool or post-tool event that reaches Agent Guard:
 - Inline scanner-suppression comments are disabled.
 - A readable allowlist can suppress only the exact SHA-256 hash of a detected
   value.
+- Context-based false-positive exclusions are compiled into the binary. No
+  runtime file or payload can add one, and a malformed list fails closed.
 - Scanner errors and recovered panics become fail-closed core decisions,
   rendered as the strongest response the host contract supports.
 - A partial post-output redaction is returned only after a clean verifying

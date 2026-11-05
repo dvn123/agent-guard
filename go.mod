@@ -6,6 +6,7 @@ toolchain go1.26.5
 
 require (
 	github.com/betterleaks/betterleaks v1.6.1
+	github.com/pelletier/go-toml/v2 v2.4.3
 	github.com/rs/zerolog v1.35.1
 )
 
@@ -40,7 +41,6 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/nwaples/rardecode/v2 v2.2.5 // indirect
-	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.27 // indirect
 	github.com/pkoukk/tiktoken-go v0.1.8 // indirect
 	github.com/rrethy/ahocorasick v1.0.0 // indirect

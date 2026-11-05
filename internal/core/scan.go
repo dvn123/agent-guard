@@ -72,6 +72,11 @@ func buildDetector() *detect.Detector {
 	if err := addGCPOAuthAccessTokenRule(cfg); err != nil {
 		panic("agent-guard: gcp-oauth-access-token rule failed: " + err.Error())
 	}
+	parsed, err := parseExclusions(exclusionsTOML, cfg)
+	if err != nil {
+		panic("agent-guard: exclusions.toml failed: " + err.Error())
+	}
+	exclusions = parsed
 
 	det := newDetectorContext(context.Background(), cfg)
 	// The library defaults to 0 (no base64/hex/percent decoding); the CLI
@@ -134,6 +139,9 @@ func scanWithContext(ctx context.Context, det *detect.Detector, text string, all
 			}
 		}
 		start, end := matchSpan(len(text), newlines, f.StartLine, f.StartColumn, f.EndColumn)
+		if isExcluded(text, f.RuleID, start, end) {
+			continue
+		}
 		findings = append(findings, Finding{Rule: f.RuleID, Secret: f.Secret, AllowKey: key, Start: start, End: end})
 	}
 	return findings, nil

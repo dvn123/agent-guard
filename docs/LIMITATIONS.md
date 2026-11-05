@@ -70,6 +70,12 @@ Secret detection is heuristic. False positives and false negatives remain
 possible. The local authenticated-URL rule ignores low-entropy and placeholder
 values, which improves precision but cannot identify every credential.
 
+Built-in exclusions (`internal/core/exclusions.toml`) drop findings by context:
+a listed rule whose span is exactly the capture group of the entry's pattern.
+A real secret that lands in that exact position and is matched only by the
+listed rules is not detected. Each entry trades that recall for removing a
+recurring false positive.
+
 Hash allowlisting is exact-value based. It suppresses a value everywhere and
 therefore weakens future protection for that value until the hash is removed.
 The hash is non-reversible in normal use but still represents sensitive policy

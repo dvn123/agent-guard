@@ -1,0 +1,32 @@
+# Built-in false-positive exclusions, compiled into agent-guard.
+#
+# A finding is dropped when its rule is listed in `rules` and some match of
+# `pattern` has its single capture group covering exactly the flagged span.
+# For a decoded finding (base64, hex, percent) the span is the encoded text,
+# not the decoded secret.
+#
+# Fields, all required:
+#   id           unique, kebab-case
+#   description  what the value is and why it is not a secret worth blocking
+#   rules        betterleaks rule IDs the exclusion applies to; keep it to the
+#                rules that actually fire, never a broad list
+#   pattern      Go RE2 regex with exactly one capture group; anchor it on
+#                context that only the benign source produces
+#   examples     realistic tool output that must be flagged without this
+#                exclusion and clean with it; use fake values only
+#
+# Add a negative case to TestScanExclusionsStayNarrow for each new entry.
+
+[[exclusion]]
+id = "cursor-bugbot-link"
+description = """
+Cursor Bugbot "Fix in Cursor" and "Fix in Web" links on GitHub review comments. \
+The link parameter is base64url JSON carrying per-link redisKey and encryptionKey \
+fields, which generic-api-key flags after decoding. Anyone who can read the pull \
+request already sees them."""
+rules = ["generic-api-key"]
+pattern = '''https://(?:www\.)?cursor\.com/(?:open|agents)\?link=([A-Za-z0-9_-]+=*)'''
+examples = [
+  '<a href="https://cursor.com/open?link=eyJ2ZXJzaW9uIjoxLCJ0eXBlIjoiQlVHQk9UX0ZJWF9JTl9DVVJTT1IiLCJkYXRhIjp7InJlZGlzS2V5IjoiaEFUY3ZON3FIMmpDVmV4UTlzSzRtRVhnelNidU02cEdaaUJVZHdQOHJKMyIsImVuY3J5cHRpb25LZXkiOiJuRlloQVRjdk43cUgyakNWZXhROXNLNG1FWGd6U2J1TTZwR1ppQlVkd1A4IiwiYnJhbmNoIjoic29tZS9mZWF0dXJlLWJyYW5jaCIsInJlcG9Pd25lciI6ImFjbWUiLCJyZXBvTmFtZSI6IndpZGdldHMiLCJwcm92aWRlciI6ImdpdGh1YiJ9fQ" target="_blank" rel="noopener noreferrer">',
+  '<a href="https://cursor.com/agents?link=eyJ2ZXJzaW9uIjoxLCJ0eXBlIjoiQlVHQk9UX0ZJWF9JTl9XRUIiLCJkYXRhIjp7InJlZGlzS2V5IjoibUVYZ3pTYnVNNnBHWmlCVWR3UDhySjNrRFdmeVJhdEw1bkZZaEFUY3ZONyIsImVuY3J5cHRpb25LZXkiOiJzSzRtRVhnelNidU02cEdaaUJVZHdQOHJKM2tEV2Z5UmF0TDVuRlloQVRjIiwiYnJhbmNoIjoic29tZS9mZWF0dXJlLWJyYW5jaCIsInJlcG9Pd25lciI6ImFjbWUiLCJyZXBvTmFtZSI6IndpZGdldHMiLCJwcm92aWRlciI6ImdpdGh1YiJ9fQ" target="_blank" rel="noopener noreferrer">',
+]

@@ -1,0 +1,9 @@
+# Keeps hand-made layout: blank lines and the line breaks of folded (>) blocks survive.
+doublestar: true
+formatter:
+  type: basic
+  retain_line_breaks: true
+  scan_folded_as_literal: true
+# vendor/ is third-party code that `go mod vendor` rewrites.
+exclude:
+  - "**/vendor/**"

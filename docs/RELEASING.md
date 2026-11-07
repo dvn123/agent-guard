@@ -15,7 +15,7 @@ vendored dependency licenses, and include both in the release archive.
 
 - Module path: `github.com/dvn123/agent-guard`
 - Go language version: 1.26
-- Go toolchain: 1.26.5
+- Go toolchain: 1.26.10
 - Vulnerability scanner: `govulncheck` 1.6.0 as a vendored Go tool
 - Dependencies: exact versions in `go.mod` and `go.sum`
 - Build dependency tree: checked-in `vendor/`

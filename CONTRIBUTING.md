@@ -5,7 +5,7 @@ contracts, and provide executable evidence for behavior claims.
 
 ## Environment
 
-- Go 1.26.5 with `GOTOOLCHAIN=local`
+- Go 1.26.10 with `GOTOOLCHAIN=local`
 - Bun 1.3.14 for the OpenCode adapter tests
 - Vendored module builds with `-mod=vendor`
 

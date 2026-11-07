@@ -39,7 +39,7 @@ unsupported schema rather than guess at renamed fields.
   "runtime": {
     "goos": "darwin",
     "goarch": "arm64",
-    "go_version": "go1.26.5"
+    "go_version": "go1.26.10"
   },
   "integrations": [
     {

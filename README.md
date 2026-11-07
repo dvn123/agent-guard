@@ -73,7 +73,7 @@ network. The complete contract is in [Diagnostics](docs/DIAGNOSTICS.md).
 
 ## Develop
 
-Agent Guard requires Go 1.26.5. OpenCode adapter tests run under Node 26.5.1
+Agent Guard requires Go 1.26.10. OpenCode adapter tests run under Node 26.5.1
 and Bun 1.3.14 to cover both Desktop and CLI plugin runtimes.
 
 ```sh

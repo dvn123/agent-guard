@@ -14,8 +14,15 @@
 
 # Cursor's GUI hook process may omit HOME. Resolve it from the user database
 # before deriving paths; other clients keep their existing HOME unchanged.
+# POSIX leaves a bare `~` unspecified without HOME (dash keeps it empty), but
+# `~name` reads the user database in every sh; eval needs a plain login name.
 if [ -z "${HOME:-}" ]; then
-	HOME=$(cd ~ 2>/dev/null && pwd) || HOME=
+	user=$(id -un 2>/dev/null) || user=
+	case "x$user" in
+	x | *[!A-Za-z0-9._-]*) HOME= ;;
+	*) HOME=$(eval "cd ~$user" 2>/dev/null && pwd) || HOME= ;;
+	esac
+	unset user
 	case "$HOME" in
 	/*) export HOME ;;
 	*)

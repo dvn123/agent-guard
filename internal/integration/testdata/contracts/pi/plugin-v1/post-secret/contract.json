@@ -1,0 +1,14 @@
+{
+  "tool": "pi",
+  "mode": "post",
+  "host_contract": "Pi extension tool_result",
+  "fixture_source": "agent-guard:integrations/opencode-pi/agent-guard/index.js",
+  "contract_source": "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/extensions.md",
+  "source_checked_at": "2026-11-08",
+  "host_version": "Pi 1.5.0 docs/extensions.md tool_call and tool_result contract.",
+  "contains_secret": true,
+  "expected_exit": 2,
+  "expected_stderr": "stripe-access-token",
+  "redacts_secret": true,
+  "preserves": "build ok"
+}

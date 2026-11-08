@@ -41,7 +41,7 @@ availability and host-contract risk.
 - Cursor pre hooks can return explicit allow or deny JSON. Cursor
   `afterShellExecution` is observational, so Agent Guard can warn but cannot
   retract output already delivered to the model.
-- The shipped Cursor snippet guards `beforeShellExecution` and
+- The shipped Cursor hooks guard `beforeShellExecution` and
   `beforeReadFile`; it does not register generic `preToolUse` or
   `beforeMCPExecution`. MCP calls and other Cursor tools are therefore outside
   Agent Guard's boundary.
@@ -56,9 +56,10 @@ availability and host-contract risk.
   mitigation, not a hard guarantee, so Cursor's built-in command controls must
   remain the primary hard-enforcement layer until the host fixes the race. See
   the [upstream acknowledgement](https://forum.cursor.com/t/race-condition-silently-disables-hooks-that-exit-quickly/165818/7).
-- OpenCode uses a JavaScript adapter under Bun in the CLI and Electron's Node
-  runtime in Desktop. Pre failures throw; post failures mutate `output.output`.
-  A breaking plugin API change can invalidate that boundary.
+- OpenCode and Pi use a JavaScript adapter: under Bun in the OpenCode CLI,
+  Electron's Node runtime in OpenCode Desktop, and Pi's own runtime. Pre
+  failures block the call; post failures replace the tool result. A breaking
+  plugin or extension API change can invalidate that boundary.
 
 Unknown event names intentionally pass through without initializing the
 scanner. This preserves compatibility but means newly introduced host events

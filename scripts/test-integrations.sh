@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run deterministic launcher, host-contract, installer, and OpenCode adapter
+# Run deterministic launcher, host-contract, installer, and OpenCode/Pi adapter
 # tests without reading installed Agent Guard artifacts.
 set -eu
 
@@ -21,7 +21,7 @@ trap cleanup EXIT HUP INT TERM
 		GOTOOLCHAIN=local \
 		go test -mod=vendor -count=1 ./tests/blackbox
 	AGENT_GUARD_TEST_BINARY="$tmp_dir/agent-guard" \
-		node --test ./integrations/opencode/agent-guard.test.js
+		node --test ./integrations/opencode-pi/agent-guard.test.js
 	AGENT_GUARD_TEST_BINARY="$tmp_dir/agent-guard" \
-		bun test ./integrations/opencode/agent-guard.test.js
+		bun test ./integrations/opencode-pi/agent-guard.test.js
 )

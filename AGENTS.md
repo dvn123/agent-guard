@@ -11,8 +11,8 @@ Do not configure or invoke a hook binary directly. Black-box hook invocations
 must pass through a copied `integrations/launcher/run.sh`.
 
 Treat host configuration as externally owned. Provide or update reusable
-snippets and installer primitives, but do not add code that overwrites or
-merges generated Claude, Codex, Cursor, or OpenCode configuration.
+adapters and installer primitives, but do not add code that overwrites or
+merges generated Claude, Codex, Cursor, OpenCode, or Pi configuration.
 
 Runtime behavior must remain offline and built from the vendored dependency
 tree. Recognized guarded events fail closed. Preserve native host protocol

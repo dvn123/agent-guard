@@ -33,7 +33,8 @@ var registry = []Metadata{
 	{ID: "claude", DisplayName: "Claude Code", ProtocolVersion: "hooks-v1", Adapter: claudeAdapter{}},
 	{ID: "codex", DisplayName: "Codex", ProtocolVersion: "hooks-v1", Adapter: codexAdapter{}},
 	{ID: "cursor", DisplayName: "Cursor", ProtocolVersion: "hooks-v1", Adapter: cursorAdapter{}},
-	{ID: "opencode", DisplayName: "OpenCode", ProtocolVersion: "plugin-v1", Adapter: openCodeAdapter{}},
+	{ID: "opencode", DisplayName: "OpenCode", ProtocolVersion: "plugin-v1", Adapter: pluginAdapter{}},
+	{ID: "pi", DisplayName: "Pi", ProtocolVersion: "plugin-v1", Adapter: pluginAdapter{}},
 }
 
 // All returns a copy of the ordered integration registry.

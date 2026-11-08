@@ -126,8 +126,8 @@ func TestVersionedHostContracts(t *testing.T) {
 
 func TestRegistryHasOneAdapterPerSupportedHost(t *testing.T) {
 	entries := All()
-	if len(entries) != 4 {
-		t.Fatalf("registry has %d entries, want 4", len(entries))
+	if len(entries) != 5 {
+		t.Fatalf("registry has %d entries, want 5", len(entries))
 	}
 	seen := map[string]bool{}
 	for _, entry := range entries {

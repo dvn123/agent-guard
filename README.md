@@ -5,7 +5,7 @@ hook events. It scans guarded tool input before execution and tool output
 before the model consumes it, using an embedded Betterleaks ruleset and one
 additional authenticated-URL rule.
 
-The project supports Claude Code, Codex, Cursor, and OpenCode without sharing
+The project supports Claude Code, Codex, Cursor, OpenCode, and Pi without sharing
 their protocol logic. A stable launcher normalizes failures and provides an
 eight-hour human-controlled disable sentinel; the staged installer preserves
 the last-known-good binary.
@@ -49,7 +49,7 @@ It installs:
 ```
 
 The installer does not read, merge, or modify coding-agent configuration.
-Manually merge exactly one reusable snippet from [`integrations/`](integrations/)
+Register the host adapters from [`integrations/`](integrations/)
 as described in [Integrations](docs/INTEGRATIONS.md). Every hook must call the
 stable launcher, never the versioned or installed binary directly.
 
@@ -73,7 +73,7 @@ network. The complete contract is in [Diagnostics](docs/DIAGNOSTICS.md).
 
 ## Develop
 
-Agent Guard requires Go 1.26.10. OpenCode adapter tests run under Node 26.5.1
+Agent Guard requires Go 1.26.10. OpenCode and Pi adapter tests run under Node 26.5.1
 and Bun 1.3.14 to cover both Desktop and CLI plugin runtimes.
 
 ```sh

@@ -13,7 +13,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -124,11 +123,11 @@ func TestLauncherResolvesUnsetHomeFromUserDatabase(t *testing.T) {
 	}
 }
 
-func TestNativeSnippetCommandsResolveHomeSafely(t *testing.T) {
+func TestHookCommandsResolveHomeSafely(t *testing.T) {
 	paths := []string{
-		"integrations/claude/settings.snippet.json",
-		"integrations/codex/config.snippet.toml",
-		"integrations/cursor/hooks.snippet.json",
+		"integrations/marketplace/plugins/agent-guard/hooks/claude.json",
+		"integrations/marketplace/plugins/agent-guard/hooks/codex.json",
+		"integrations/cursor/hooks.json",
 	}
 	current, err := user.Current()
 	if err != nil {
@@ -136,7 +135,7 @@ func TestNativeSnippetCommandsResolveHomeSafely(t *testing.T) {
 	}
 
 	for _, relative := range paths {
-		commands := snippetCommands(t, filepath.Join(repoRoot, relative))
+		commands := hookCommands(t, filepath.Join(repoRoot, relative))
 		if len(commands) == 0 {
 			t.Fatalf("%s contains no hook commands", relative)
 		}
@@ -154,19 +153,19 @@ func TestNativeSnippetCommandsResolveHomeSafely(t *testing.T) {
 				command.Env = []string{"HOME=" + home, "PATH=/usr/bin:/bin", "LANG=C"}
 				got := runCommand(t, command)
 				if got.exitCode != 0 || !strings.HasPrefix(got.stdout, home+"|--tool ") {
-					t.Fatalf("snippet command = (%d, %q, %q)", got.exitCode, got.stdout, got.stderr)
+					t.Fatalf("hook command = (%d, %q, %q)", got.exitCode, got.stdout, got.stderr)
 				}
 			})
 
 			t.Run(name+"/unset-home", func(t *testing.T) {
 				const prefix = "/bin/sh -c '"
 				if !strings.HasPrefix(hookCommand, prefix) || !strings.HasSuffix(hookCommand, "'") {
-					t.Fatalf("snippet command lacks the expected shell bootstrap: %q", hookCommand)
+					t.Fatalf("hook command lacks the expected shell bootstrap: %q", hookCommand)
 				}
 				script := strings.TrimSuffix(strings.TrimPrefix(hookCommand, prefix), "'")
 				execIndex := strings.Index(script, `exec "$HOME/.config/agent-guard/run.sh"`)
 				if execIndex < 0 {
-					t.Fatalf("snippet command lacks a quoted launcher exec: %q", hookCommand)
+					t.Fatalf("hook command lacks a quoted launcher exec: %q", hookCommand)
 				}
 				script = script[:execIndex] + `printf '%s\n' "$HOME"`
 
@@ -178,7 +177,7 @@ func TestNativeSnippetCommandsResolveHomeSafely(t *testing.T) {
 				}
 				got := runCommand(t, command)
 				if got.exitCode != 0 || strings.TrimSpace(got.stdout) != current.HomeDir {
-					t.Fatalf("snippet resolved HOME = (%d, %q, %q), want %q", got.exitCode, got.stdout, got.stderr, current.HomeDir)
+					t.Fatalf("hook resolved HOME = (%d, %q, %q), want %q", got.exitCode, got.stdout, got.stderr, current.HomeDir)
 				}
 			})
 		}
@@ -581,28 +580,12 @@ func runCommand(t *testing.T, command *exec.Cmd) result {
 	return result{stdout: stdout.String(), stderr: stderr.String(), exitCode: exitCode}
 }
 
-func snippetCommands(t *testing.T, path string) []string {
+func hookCommands(t *testing.T, path string) []string {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if filepath.Ext(path) == ".toml" {
-		var commands []string
-		for line := range strings.Lines(string(data)) {
-			value, ok := strings.CutPrefix(strings.TrimSpace(line), "command = ")
-			if !ok {
-				continue
-			}
-			command, err := strconv.Unquote(value)
-			if err != nil {
-				t.Fatalf("%s: invalid command string: %v", path, err)
-			}
-			commands = append(commands, command)
-		}
-		return commands
-	}
-
 	var decoded any
 	if err := json.Unmarshal(data, &decoded); err != nil {
 		t.Fatalf("%s: %v", path, err)

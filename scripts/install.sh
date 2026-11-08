@@ -118,4 +118,4 @@ HOME="$test_home" "$test_home/.config/agent-guard/run.sh" doctor --json >/dev/nu
 # first. If the final binary rename fails, the last-known-good binary remains.
 mv -f "$launcher_candidate" "$config_dir/run.sh"
 mv -f "$candidate" "$install_dir/agent-guard"
-echo "Agent Guard installed. Merge one integration snippet manually; no host configuration was modified."
+echo "Agent Guard installed. Register the host adapters from integrations/; no host configuration was modified."

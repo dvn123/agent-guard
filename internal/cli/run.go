@@ -87,7 +87,7 @@ func parseTool(args []string) (string, error) {
 		return "codex", nil
 	}
 	if len(args) != 2 || args[0] != "--tool" || args[1] == "" {
-		return "", fmt.Errorf("usage: agent-guard [hook] --tool {claude,codex,cursor,opencode}")
+		return "", fmt.Errorf("usage: agent-guard [hook] --tool {claude,codex,cursor,opencode,pi}")
 	}
 	return args[1], nil
 }
@@ -104,8 +104,8 @@ func writeOutput(output integration.Output, stdout, stderr io.Writer) int {
 
 func printHelp(writer io.Writer) {
 	fmt.Fprintln(writer, "Usage:")
-	fmt.Fprintln(writer, "  agent-guard --tool {claude,codex,cursor,opencode}")
-	fmt.Fprintln(writer, "  agent-guard hook --tool {claude,codex,cursor,opencode}")
+	fmt.Fprintln(writer, "  agent-guard --tool {claude,codex,cursor,opencode,pi}")
+	fmt.Fprintln(writer, "  agent-guard hook --tool {claude,codex,cursor,opencode,pi}")
 	fmt.Fprintln(writer, "  agent-guard doctor [--json]")
 	fmt.Fprintln(writer, "  agent-guard version")
 }

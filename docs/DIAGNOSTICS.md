@@ -70,4 +70,4 @@ expose administrative state.
 The command proves the candidate's scanner and redaction path, registered
 adapters, runtime, and stable launcher compatibility. It does not inspect or
 modify host configuration and therefore does not claim that Claude Code,
-Codex, Cursor, or OpenCode has loaded the supplied snippet.
+Codex, Cursor, OpenCode, or Pi has loaded the supplied adapter.

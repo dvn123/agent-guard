@@ -40,10 +40,13 @@ archives:
       - SECURITY.md
       - docs/*.md
       - integrations/launcher/run.sh
-      - integrations/claude/settings.snippet.json
-      - integrations/codex/config.snippet.toml
-      - integrations/cursor/hooks.snippet.json
-      - integrations/opencode/agent-guard.js
+      - integrations/marketplace/.claude-plugin/marketplace.json
+      - integrations/marketplace/.agents/plugins/marketplace.json
+      - integrations/marketplace/plugins/agent-guard/.claude-plugin/plugin.json
+      - integrations/marketplace/plugins/agent-guard/.codex-plugin/plugin.json
+      - integrations/marketplace/plugins/agent-guard/hooks/*.json
+      - integrations/cursor/hooks.json
+      - integrations/opencode-pi/agent-guard/*.js
       - scripts/install.sh
       - scripts/guard-allow
       - scripts/guard-disable

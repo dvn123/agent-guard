@@ -6,7 +6,7 @@ contracts, and provide executable evidence for behavior claims.
 ## Environment
 
 - Go 1.26.10 with `GOTOOLCHAIN=local`
-- Bun 1.3.14 for the OpenCode adapter tests
+- Bun 1.3.14 for the OpenCode and Pi adapter tests
 - Vendored module builds with `-mod=vendor`
 
 Do not add a runtime network dependency, external scanner configuration, or a
@@ -18,7 +18,7 @@ or coding-agent automation.
 - `internal/core`: host-independent policy and scanner behavior
 - `internal/cli`: commands, streams, and diagnostics
 - `internal/integration`: thin native host adapters and versioned fixtures
-- `integrations`: launcher, configuration snippets, and the OpenCode bridge
+- `integrations`: launcher, host plugins, Cursor hooks, and the OpenCode and Pi bridge
 - `tests/blackbox`: launcher-mediated subprocess coverage
 - `scripts`: install, verification, build, and human recovery primitives
 

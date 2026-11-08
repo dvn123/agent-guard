@@ -8,7 +8,7 @@ cmd/agent-guard
     ▼
 internal/cli ──► internal/core ──► embedded Betterleaks
     │
-    └─────────► internal/integration/{claude,codex,cursor,opencode}
+    └─────────► internal/integration/{claude,codex,cursor,plugin}
                                       │
                                       ▼
                                native host protocol
@@ -30,9 +30,9 @@ internal/cli ──► internal/core ──► embedded Betterleaks
 5. `integrations/launcher/run.sh` is the stable installed entrypoint. It
    handles the disable sentinel, missing binaries, and host-sensitive exit
    normalization before delegating to the Go binary.
-6. `integrations/opencode/agent-guard.js` translates OpenCode plugin events
-   into the same launcher contract. The other hosts invoke the launcher
-   directly from configuration.
+6. `integrations/opencode-pi/agent-guard/` translates OpenCode plugin events
+   and Pi extension events into the same launcher contract through one shared
+   bridge. The other hosts invoke the launcher directly from configuration.
 
 ## Scanner lifetime and failures
 
@@ -90,7 +90,7 @@ only at test runtime.
 redaction, and preserved safe output.
 
 Black-box tests build a candidate and invoke it only through a copied launcher
-inside a throwaway `HOME`. The OpenCode adapter tests use the same isolation
+inside a throwaway `HOME`. The OpenCode and Pi adapter tests use the same isolation
 under both Node, matching Desktop's Electron runtime, and Bun, matching the
 CLI. Neither suite consults installed Agent Guard artifacts.
 
@@ -102,4 +102,4 @@ the cutover. Moving the launcher first is backward-compatible; failure to move
 the candidate binary leaves the last-known-good binary in place.
 
 Host configuration ownership remains outside this project. Installer code does
-not parse or merge generated Claude, Codex, Cursor, or OpenCode configuration.
+not parse or merge generated Claude, Codex, Cursor, OpenCode, or Pi configuration.

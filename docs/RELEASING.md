@@ -44,7 +44,7 @@ mise x goreleaser@2.17.1 -- goreleaser check
 ```
 
 `scripts/test-integrations.sh` requires Node 26.5.1 and Bun 1.3.14 for the
-OpenCode adapter.
+OpenCode and Pi adapters.
 The Mise invocation enforces the locked GoReleaser URL, checksum, and available
 artifact provenance. Review `git status`, the complete diff, module and tool
 locks, vendored changes, workflow action pins, and generated archive contents

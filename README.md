@@ -74,11 +74,12 @@ network. The complete contract is in [Diagnostics](docs/DIAGNOSTICS.md).
 ## Develop
 
 Agent Guard requires Go 1.26.10. OpenCode and Pi adapter tests run under Node 26.5.1
-and Bun 1.3.14 to cover both Desktop and CLI plugin runtimes.
+and Bun 1.3.14 to cover both Desktop and CLI plugin runtimes. `mise.toml` sets
+`GOTOOLCHAIN=local` and `GOFLAGS=-mod=vendor`.
 
 ```sh
-GOTOOLCHAIN=local go test -mod=vendor -count=1 ./...
-GOTOOLCHAIN=local GOFLAGS=-mod=vendor go tool govulncheck ./...
+go test -count=1 ./...
+go tool govulncheck ./...
 scripts/test-integrations.sh
 scripts/build-all.sh ./dist/builds
 ```

@@ -9,6 +9,10 @@ contracts, and provide executable evidence for behavior claims.
 - Bun 1.3.14 for the OpenCode and Pi adapter tests
 - Vendored module builds with `-mod=vendor`
 
+`mise.toml` pins the tools and sets `GOTOOLCHAIN=local` and
+`GOFLAGS=-mod=vendor`; without mise, export both before running the commands
+below.
+
 Do not add a runtime network dependency, external scanner configuration, or a
 host-config merger. Do not execute recovery or allowlisting helpers from tests
 or coding-agent automation.
@@ -27,8 +31,8 @@ or coding-agent automation.
 Run:
 
 ```sh
-GOTOOLCHAIN=local go test -mod=vendor -count=1 ./...
-GOTOOLCHAIN=local GOFLAGS=-mod=vendor go tool govulncheck ./...
+go test -count=1 ./...
+go tool govulncheck ./...
 scripts/test-integrations.sh
 scripts/build-all.sh ./dist/builds
 ```

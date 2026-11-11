@@ -593,6 +593,9 @@ func TestScanExclusionsStayNarrow(t *testing.T) {
 		{"hex api key", `{"api` + `Key":"` + fakeHex(32) + `"}`},
 		{"tfe oauth token value", `"oauth-token": "` + fakeSecret(40) + `"`},
 		{"databricks client secret", `"oauth2_app_client_secret": "` + fakeSecret(40) + `"`},
+		{"keystore password in java tool options", `Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.keyStorePassword=` + fakeSecret(16)},
+		{"truststore password outside java tool options", `java -Djavax.net.ssl.trustStorePassword=` + fakeSecret(16) + ` -jar app.jar`},
+		{"other key beside truststore password", `JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStorePassword=` + fakeSecret(16) + ` -Dvendor.api.key=` + fakeSecret(32)},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			findings, err := scan(testDetector(t), tc.text, nil)

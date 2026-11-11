@@ -94,3 +94,18 @@ pattern = '''"oauth2_app_(?:client|integration)_id"\s*:\s*"([0-9a-f]{8}-[0-9a-f]
 examples = [
   "\"name\": \"example-app\",\n  \"oauth2_app_client_id\": \"e426f766-1eae-7064-9751-cd46c4f44301\",\n  \"oauth2_app_integration_id\": \"07b99418-7a60-3d65-a1c1-e75aab8af89d\",\n  \"resources\": []",
 ]
+
+[[exclusion]]
+id = "java-tool-options-truststore-password"
+description = """
+The javax.net.ssl.trustStorePassword system property in JAVA_TOOL_OPTIONS, in \
+the "Picked up JAVA_TOOL_OPTIONS:" notice every JVM prints to stderr and in \
+environment dumps. A truststore holds only public CA certificates; its \
+password guards the file's integrity, not anything confidential. \
+keyStorePassword, which protects private keys, stays flagged."""
+rules = ["generic-api-key"]
+pattern = '''(?:Picked up JAVA_TOOL_OPTIONS:|JAVA_TOOL_OPTIONS=)[^\n]*?-Djavax\.net\.ssl\.trustStorePassword=([^\s"']+)'''
+examples = [
+  "Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/Users/someone/.certs/java-cacerts -Djavax.net.ssl.trustStorePassword=DmCVP1sWaNr54bvl\nopenjdk version \"21.0.11\" 2026-04-21\n",
+  "JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=/Users/someone/.certs/java-cacerts -Djavax.net.ssl.trustStorePassword=DmCVP1sWaNr54bvl -Xmx2g\n",
+]
